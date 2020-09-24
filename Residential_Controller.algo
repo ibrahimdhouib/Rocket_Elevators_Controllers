@@ -1,0 +1,123 @@
+Residential
+
+
+Column:
+ - Manage the Elevetors
+ - Floor Number
+ - Column Button
+ - Elevator List
+
+
+Elevetor
+ - Current Floor
+ - Floor Button
+ - Door
+ - Status (STOP,Move, UP, DOWN)
+
+
+Button
+ - Floor
+ - Direction
+
+
+Floor List (1,2,3,4,5,6,7,8,9,10)
+Elevator List (Elevator_A, Elevators_B)
+
+
+
+SEQUENCES  
+--------------------------------------------------------------------------------------
+
+'Request elevator'
+
+SEQUENCE RequestElevator
+     SET Elevator UP or DOWN
+ENDSEQUENCE 
+
+'FindElevator'
+
+SEQUENCE FindBestElevator Using Column_button Returning Elevator 
+     INIT Bestelevator = NULL 
+     INIT BestDistance = 100
+
+// browse the elevator list  in the column
+
+    For each Elevator IN COLUMN  Elevator_list
+     
+         INIT CurrentDistance = ABSOLUTE(Column_button floor - Elevator Current floor)
+
+         IF CurrentDistance < BestDistance
+         BestDistance = CurrentDistance
+         Bestelevator = Elevator
+         ENDIF
+
+         IF elevator STATUS is UP THEN move TO requested floor
+         SET elevator_floor THEN open the door THEN USER inside
+
+     ENDFOR
+
+     RETURN BestElevator;
+
+ENDSEQUENCE
+
+
+'Moving Elavator to the requested floor'
+
+SEQUENCE MovingElevator
+         IF Elevator reach the  floor THEN Stop Moving
+         SET open the door and  THEN close the door 
+         ENDIF
+ENDSEQUENCE
+
+
+'Close the elevator door'
+
+SEQUENCE CloseDoor
+        SET Close Door
+        IF Elevator STATUS not moving open the door 
+        ELSE keep door closing  and  wait next call
+ENDSEQUENCE
+
+
+'Open the elevator door'
+
+SEQUENCE OpenDoor
+        SET Open Door
+        IF Elevator STATUS not moving open  the door 
+        ELSE keep door closing  and  wait next call
+ENDSEQUENCE
+
+
+
+'STATUS of elevator'
+
+SEQUENCE ElevatorStatus
+        SET Elevator Status to STOP or MOVE
+ENDSEQUENCE
+
+
+
+'MOVING UP'
+
+SEQUENCE MoveUP USING Floor_button
+        SET floor_LIST
+        WHILE Floor_LIST is not EMPTY
+              REMOVE a floor FROM floor_LIST and Move UP the Elevator
+        ENDWHILE
+ENDSEQUENCE
+
+
+
+'MOVING DOWN'
+
+SEQUENCE MoveDOWN USING Floor_button
+        SET floor_LIST
+        WHILE Floor_LIST is not EMPTY
+              REMOVE a floor FROM floor_LIST and Move DOWN the Elevator
+        ENDWHILE
+ENDSEQUENCE
+
+
+
+
+
