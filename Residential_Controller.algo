@@ -3,14 +3,14 @@ Residential
 
 Column:
  - Manage the Elevetors
- - Floor Number
- - Column Button
- - Elevator List
+ - Floor_Number
+ - Column_Button
+ - Elevator_List
 
 
 Elevetor
- - Current Floor
- - Floor Button
+ - Current_Floor
+ - Floor_Button
  - Door
  - Status (STOP,Move, UP, DOWN)
 
@@ -20,8 +20,8 @@ Button
  - Direction
 
 
-Floor List (1,2,3,4,5,6,7,8,9,10)
-Elevator List (Elevator_A, Elevators_B)
+Floor_List (1,2,3,4,5,6,7,8,9,10)
+Elevator_List (Elevator_A, Elevators_B)
 
 
 
@@ -34,13 +34,13 @@ SEQUENCE RequestElevator
      SET Elevator UP or DOWN
 ENDSEQUENCE 
 
-'FindElevator'
+'Find Elevator'
 
 SEQUENCE FindBestElevator Using Column_button Returning Elevator 
      INIT Bestelevator = NULL 
      INIT BestDistance = 100
 
-// browse the elevator list  in the column
+// Browse the elevator list  in the column
 
     For each Elevator IN COLUMN  Elevator_list
      
