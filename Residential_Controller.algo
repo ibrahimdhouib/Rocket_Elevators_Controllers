@@ -38,7 +38,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
         FOR EACH numberOfElevators 
             SET i = 1
             ADD (INSTANTIATE Elevator WITH i AND "IDLE" AND 1 AND "CLOSED" AND numberOfFloors) TO ElevatorsList
-              i=i+1 //INCREMENT i by 1 
+              i=i+1  
         ENDFOR
     ENDSEQUENCE    
 
@@ -46,7 +46,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
         FOR EACH numberOfFloors 
             SET i = 1
             ADD (INSTANTIATE Button WITH i AND numberOfFloors AND "OFF") TO ButtonsUpList
-               i=i+1  //INCREMENT i by 1 
+               i=i+1  
         ENDFOR
     ENDSEQUENCE
 
@@ -54,7 +54,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
         FOR EACH numberOfFloors 
             SET i = 1
             ADD (INSTANTIATE Button WITH i AND numberOfFloors AND "OFF") TO ButtonsDownList
-               i=i+1 ////INCREMENT i by 1 
+               i=i+1 
         ENDFOR
     ENDSEQUENCE
 ENDDEFINE
@@ -78,7 +78,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
         FOR EACH numberOfFloors 
             SET tempID = 1
             ADD (INSTANTIATE Door WITH tempID AND numberOfFloors) TO FloorDoorsList
-               tempID  =tempID+1       //INCREMENT tempID by 1
+               tempID  =tempID+1      
         ENDFOR
     ENDSEQUENCE
 
@@ -86,7 +86,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
         FOR EACH numberOfFloors 
             SET tempID = 1
             ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OF") TO FloorButtonsList
-            tempID  =tempID+1   //INCREMENT tempID by 1
+            tempID  =tempID+1   
         ENDFOR
     ENDSEQUENCE
 ENDDEFINE
