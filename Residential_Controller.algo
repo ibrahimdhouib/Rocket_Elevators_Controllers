@@ -1,8 +1,11 @@
 
-OBJECTS : 
+OBJECTS: 
+
 Column (ID,Status,ElevatorsList,ButtonsUpList,ButtonsDownList)
     status take   ACTIVE or INACTIVE    
     buttons take  ON or OFF
+
+
 Elevator(ID,Status,Floor,ObstructionSensor,elevatorDoor,FloorDoorsList,FloorButtonsList,FloorList)
    status take  IDLE, UP or DOWN 
    obstructionSensor take  ON or OFF
@@ -11,20 +14,19 @@ Elevator(ID,Status,Floor,ObstructionSensor,elevatorDoor,FloorDoorsList,FloorButt
    buttons take  ON or OFF
 
 
+'--------------------------------------------- 'VARIABLES' ---------------------------------------------
 
-
-//------------------------------------------- GLOBAL VARIABLES ------------------------------------------
-//-------------------------------------------------------------------------------------------------------
 SET numberOfFloors       
 SET numberOfElevators
 SET waitingTime        
 
 
 
-//----------------------------------------------- OBJECTS -----------------------------------------------
-//-------------------------------------------------------------------------------------------------------
+'---------------------------------------------- 'DEFINE' -----------------------------------------------
 
-<------------------- COLUMN OBJECT ------------------->
+
+'COLUMN DEFINE' 
+
 DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
     ID: id,
     Status: status,
@@ -57,7 +59,11 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
     ENDSEQUENCE
 ENDDEFINE
 
-<------------------- ELEVATOR OBJECT ------------------->
+
+
+
+'ELEVATOR DEFINE' 
+
 DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     ID: id,
     Status: status,
@@ -85,14 +91,21 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     ENDSEQUENCE
 ENDDEFINE
 
-<------------------- DOOR OBJECT ------------------->
+
+
+
+'DOOR DEFINE' 
+
 DEFINE Door USING id AND numberOfFloors
     ID: id,
     Status: status,
     Floor: floor,
 ENDDEFINE
 
-<------------------- BUTTON OBJECT ------------------->
+
+
+'BUTTON DEFINE'
+
 DEFINE Button USING id AND numberOfFloors
     ID: id,
     Status: status,
@@ -100,11 +113,11 @@ DEFINE Button USING id AND numberOfFloors
 ENDDEFINE
 
 
-//----------------------------------------------- SEQUENCES -----------------------------------------------
-//---------------------------------------------------------------------------------------------------------
+'----------------------------------------------- 'SEQUENCES' -----------------------------------------------
 
--------------------  FIND THE BEST ELEVATOR  -------------------
 
+
+'FIND THE BEST ELEVATOR'  
 
 SEQUENCE findElevator USING currentFloor AND currentDirection AND column1 ElevatorsList   
     SET ActiveElevatorsList TO EMPTY
@@ -131,7 +144,10 @@ SEQUENCE findElevator USING currentFloor AND currentDirection AND column1 Elevat
     RETURN bestElevator 
 ENDSEQUENCE
 
-<------------------- FIND THE NEAREST        ------------------->
+
+
+'FIND THE NEAREST' 
+
 SEQUENCE findNearestElevator USING selectedList
     SET bestElevator = firstElevatorInTheList     
     SET bestDistance = ABSOLUTE (bestElevator floor - currentFloor)
@@ -143,13 +159,21 @@ SEQUENCE findNearestElevator USING selectedList
     RETURN bestElevator 
 ENDSEQUENCE
 
-<------------------- LOGIC TO STORE FLOOR IN LIST WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
+
+
+
+'Store Floor in List After pressing Button'
+
 SEQUENCE addFloorToFloorList USING elevator AND floor 
     ADD floor TO elevator FloorList
     SORT elevator FloorList ASCENDING
 ENDSEQUENCE
 
-<------------------- LOGIC TO MOVE ELEVATOR ------------------->
+
+
+
+'MOVING ELEVATOR'
+
 SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
     WHILE elevator floorList IS NOT EMPTY DO  
 
@@ -175,13 +199,8 @@ SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
               SET ButtonsUpList-floor TO "OFF" 
               SET FloorButtonsList-floor TO "OFF" 
          ENDFOR
- 
-     
-
         ELSE
                   //moveDown 
-
-
 
           FOR EACH floor IN FloorList use a REVERSE ITERATION
                IF doors are open THEN
@@ -195,22 +214,15 @@ SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
               SET ButtonsDownList-floor TO "OFF"  
               SET FloorButtonsList-floor TO "OFF"   
          ENDFOR
-           
-           
-      
         ENDIF  
-
-
-
-
-
-
     ENDWHILE
 ENDSEQUENCE
 
+
  
 
-<------------------- LOGIC TO OPEN DOORS ------------------->
+'OPEN DOORS'
+
 SEQUENCE openDoors USING elevator AND floor AND waitingTime AND obstruction
     IF elevator floor IS EQUAL TO floor THEN
     SET timer TO 0 seconds
@@ -224,7 +236,11 @@ SEQUENCE openDoors USING elevator AND floor AND waitingTime AND obstruction
     ENDIF
 ENDSEQUENCE
 
-<------------------- LOGIC TO CLOSE DOORS ------------------->
+
+
+
+'CLOSE DOORS'
+
 SEQUENCE closeDoors USING elevator AND waitingTime
         IF  obstructionSensor IS "OFF"
             close elevatorDoor
@@ -237,7 +253,9 @@ ENDSEQUENCE
 
  
 
- <------------------- LOGIC FOR OBSTRUCTION SENSOR ------------------->
+
+'OBSTRUCTION SENSOR'
+
  SEQUENCE checkObstruction USING elevator
     IF an obstacle is detected by the door sensor THEN
         SET obstructionSensor TO "ON"
