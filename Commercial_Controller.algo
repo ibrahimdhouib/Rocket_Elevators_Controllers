@@ -1,1 +1,376 @@
-Commercial
+ 
+OBJECTS :
+
+Battery : list of N columns
+    status take ACTIVE or INACTIVE  
+ 
+
+Column (ID,Status,ElevatorsList,ButtonsUpList,ButtonsDownList)
+    status take   ACTIVE or INACTIVE    
+    buttons take  ON or OFF
+
+
+Elevator(ID,Status,Floor,ObstructionSensor,elevatorDoor,FloorDoorsList,FloorButtonsList,FloorList)
+   status take  IDLE, UP or DOWN 
+   obstructionSensor take  ON or OFF
+   elevatorDoor  take  OPENED or CLOSED
+   FloorDoors take  OPENED or CLOSED
+   buttons take  ON or OFF
+
+'--------------------------------------------- 'VARIABLES' ------------------------------------------------------------------------
+
+SET numberOfElevatorsPerColumn
+SET numberOfColumns
+SET numberOfFloors
+SET numberOfBasements
+SET totalNumberOfFloors TO numberOfFloors + numberOfBasements
+SET minBuildingFloor
+SET maxBuildingFloor TO totalNumberOfFloors
+SET waitingTime         //How many seconds the door remains open
+ 
+ 
+'--------------------------------------------- 'DOOR OBJECT' ---------------------------------------------------------------------
+
+DEFINE Door USING id AND status
+    ID: id,
+    Status: status,
+    Floor: floor,
+ENDDEFINE
+
+
+'--------------------------------------------- 'BUTTON OBJECT' -------------------------------------------------------------------
+
+DEFINE Button USING id AND status
+    ID: id,
+    Status: status,
+    Floor: floor,
+ENDDEFINE 
+
+
+'---------------------------------------------- 'BATTERY OBJECT' ----------------------------------------------------------------------
+
+DEFINE Battery USING id AND numberOfColumns AND minFloor AND maxFloor AND numberOfElevatorsPerColumn
+    Id: id,
+    status: status,
+    columnsList: SET TO EMPTY,
+    
+    SEQUENCE createColumnsList USING numberOfColumns
+        FOR EACH numberOfColumns
+            SET i = 1
+            ADD (INSTANTIATE Column WITH i AND "ACTIVE" AND 1 AND numberOfElevatorsPerColumn AND minFloor AND maxFloor) TO columnsList
+             i=i+1
+        ENDFOR
+    ENDSEQUENCE
+
+                        ------------------------ FIND THE FLOORS SERVED PER EACH COLUMN ------------------------------
+  
+    SEQUENCE calculateNumberOfFloorsPerColumn USING numberOfColumns AND numberOfFloors AND numberOfBasements AND minFloor AND maxFloor
+        IF numberOfBasements > 0 THEN 
+            SET numberOfFloorsPerColumn TO (ROUND TO FLOOR (numberOfFloors DIVIDED BY (numberOfColumns - 1)))
+            SET remainingfloors TO (numberOfFloors MODULO (numberOfColumns - 1))
+        ELSE
+            SET numberOfFloorsPerColumn TO (ROUND TO FLOOR (numberOfFloors DIVIDED BY numberOfColumns))
+            SET remainingfloors TO (numberOfFloors MODULO numberOfColumns)
+        ENDIF
+        SET minFloor TO 1   
+
+        IF numberOfColumns IS EQUAL TO 1 THEN       //if there is just one column, it serves all the floors of the building
+            SET numberServedFloors TO totalNumberOfFloors 
+            SET minFloor OF column TO minFloor  
+            SET maxFloor OF column TO totalNumberOfFloors  
+        ELSE 
+            FOR EACH columnN IN columnsList 
+                IF columnN is NOT the FIRST element OF columnsList OR numberOfBasements IS EQUAL TO 0 THEN    
+                    SET numberServedFloors TO numberOfFloorsPerColumn 
+                    SET minFloor OF columnN TO (minFloor)
+                    SET maxFloor OF columnN TO (minFloor + numberOfFloorsPerColumn - 1)
+                ENDIF
+                    SET minFloor TO (maxFloor OF columnN + 1)
+            ENDFOR
+
+            IF remainingfloors IS NOT EQUAL TO 0 THEN
+                SET maxFloor OF the LAST column OF columnsList TO maxFloor + remainingfloors
+                SET numberServedFloors TO numberOfFloorsPerColumn + remainingfloors
+            ENDIF
+
+            IF numberOfBasements > 0 THEN
+                SET numberServedFloors OF first column OF columnsList TO numberOfBasements 
+                SET minFloor OF first column OF columnsList TO (numberOfBasements MULTIPLIED BY (MINUS 1))
+                SET maxFloor OF first column OF columnsList TO 1    
+            ENDIF
+        ENDIF
+    ENDSEQUENCE
+ENDDEFINE
+
+
+'--------------------------------------------- 'COLUMN OBJECT' -----------------------------------------------------------------------
+
+DEFINE Column USING id AND status AND numberOfElevatorsPerColumn AND minFloor AND maxFloor AND numberServedFloors:
+    ID: id,
+    status: status,
+    minFloor: minFloor,
+    maxFloor: maxFloor,
+    numberServedFloors: numberServedFloors,
+    elevatorsList: SET TO EMPTY,           
+    ButtonsUpList: SET TO EMPTY ButtonsUpList     //list of UP buttons in each floor
+    ButtonsDownList: SET TO EMPTY ButtonsDownList //  list  of DOWN buttons in each floor
+
+    CALL newElevatorsList WITH numberOfElevatorsPerColumn
+    CALL newButtonsUpList WITH numberOfFloors
+    CALL newButtonsDownList WITH numberOfFloors
+    CALL GoToOrigin WITH elevatorList
+
+    SEQUENCE newElevatorsList USING numberOfElevatorsPerColumn
+        FOR EACH numberOfElevatorsPerColumn 
+            SET i = 1
+            ADD (INSTANTIATE Elevator WITH i AND "IDLE" AND 1 AND "CLOSED" AND numberServedFloors) TO elevatorsList
+            i=i+1
+        ENDFOR
+    ENDSEQUENCE    
+
+    SEQUENCE newButtonsUpList USING numberServedFloors AND minFloor AND maxBuildingFloor
+        FOR EACH numberServedFloors 
+            SET i = minFloor
+            IF i NOT EQUAL maxBuildingFloor THEN
+                ADD (INSTANTIATE Button WITH i AND "OFF") TO ButtonsUpList
+            ENDIF
+            i=i+1
+        ENDFOR
+    ENDSEQUENCE
+
+    SEQUENCE newButtonsDownList USING numberServedFloors AND minFloor AND minBuildingFloor
+        IF numberOfBasements > 0 THEN
+            SET minBuildingFloor TO (numberOfBasements MULTIPLIED BY (MINUS 1))
+        ELSE
+            SET minBuildingFloor TO 1
+        ENDIF
+        FOR EACH numberServedFloors 
+            SET i = minFloor
+            IF i > minFloor THEN
+                ADD (INSTANTIATE Button WITH i AND "OFF") TO ButtonsDownList
+            ENDIF
+            i=i+1
+        ENDFOR
+    ENDSEQUENCE
+
+    SEQUENCE GoToOrigin USING elevatorsList
+        IF CURRENTTIME > 6 AM AND LESS THAN 10 AM THEN
+            FOR EACH elevator IN elevatorsList
+                SET floor OF elevator TO 1
+            ENDFOR
+        ENDIF
+    ENDSEQUENCE
+
+                       ------------------- FIND THE BEST ELEVATOR  -------------------     
+
+    // The best option is the nearest and already moving elevator that has the same direction that the current direction
+    // If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selectedList
+
+    SEQUENCE findElevator USING currentFloor AND currentDirection AND elevatorsList OF columnN
+        SET ActiveElevatorsList TO EMPTY
+        SET IdleElevatorsList TO EMPTY
+
+        FOR EACH elevatorN IN elevatorsList
+            IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO currentDirection) THEN
+                
+                   IF (elevatorN status IS "UP" AND elevatorN floor IS < currentFloor OR elevatorN status IS "DOWN" AND elevatorN floor IS > currentFloor) THEN
+                    ADD elevatorN TO ActiveElevatorsList
+                ENDIF
+            ELSE 
+                ADD elevatorN TO IdleElevatorsList
+            ENDIF
+        ENDFOR
+
+        IF (ActiveElevatorsList IS not EMPTY) THEN
+            CALL findNearestElevator USING ActiveElevatorsList
+        ELSE 
+            CALL findNearestElevator USING IdleElevatorsList         
+
+        RETURN bestElevator 
+    ENDSEQUENCE
+
+
+                          ------------------- FIND THE NEAREST ELEVATOR -------------------
+
+    SEQUENCE findNearestElevator USING selectedList
+        SET bestElevator TO first elevator (elevator1) OF selectedList         SET bestDistance = |floor OF bestElevator - currentFloor|
+        FOR EACH elevatorN IN selectedList 
+            IF (|floor OF elevatorN - currentFloor| < bestDistance) THEN
+                SET bestElevator TO elevatorN           
+            ENDIF
+        ENDFOR
+        RETURN bestElevator 
+    ENDSEQUENCE
+
+ENDDEFINE
+
+
+'------------------------------------------- ELEVATOR OBJECT ---------------------------------------------------------------------
+
+DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
+      ID: id,
+    Status: status,
+    Floor: floor,
+    ObstructionSensor: obstructionSensor,
+    elevatorDoor: (INSTANTIATE Door WITH tempID AND numberOfFloors), //the  door  elevator
+    FloorDoorsList: SET TO EMPTY FloorDoorsList,                     //the list of the doors  elevator in each floor
+    FloorButtonsList: SET TO EMPTY FloorButtonsList,                 //the list of the floor buttons inside each elevator
+    FloorList: SET TO EMPTY FloorList,                               //the list of requested floors to stop for an elevator selected with findElevator logic
+
+    CALL newFloorDoorsList WITH numberOfFloors
+    CALL newFloorButtonsList WITH numberOfFloors
+
+    SEQUENCE newFloorDoorsList USING numberOfFloors
+        ADD (INSTANTIATE Door WITH 1 AND "CLOSED") TO floorDoorsList
+        FOR doorNumberFloor IN minFloor TO maxFloor
+            ADD (INSTANTIATE Door WITH doorNumberFloor AND "CLOSED") TO floorDoorsList
+        ENDFOR
+    ENDSEQUENCE
+
+    SEQUENCE newFloorButtonsList USING minFloor AND maxFloor AND numberOfFloors
+        ADD (INSTANTIATE Button WITH 1 AND "OFF") TO floorButtonsList //this button with ID=1 goes to the floor 1
+        FOR buttonNumber IN minFloor TO maxFloor
+            ADD (INSTANTIATE Button WITH buttonNumber AND "OFF") TO floorButtonsList
+        ENDFOR
+    ENDSEQUENCE
+
+                                -------------------  MOVE ELEVATOR -------------------
+
+    SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
+        WHILE floorList OF elevator IS NOT EMPTY DO    
+            IF (status OF elevator IS "IDLE") THEN      
+                IF (floor OF elevator IS < requestFloor) THEN
+                    SET status OF elevator TO "UP"
+                ELSE 
+                    SET status OF elevator TO "DOWN"
+                ENDIF
+            ENDIF
+
+            IF elevator status IS "UP" THEN
+                // moveUp 
+                  FOR EACH floorN IN floorList
+            IF doors are open THEN
+                CALL closeDoors
+            ENDIF
+            MOVE elevator UP to the next item
+            DISPLAY floorN ON internal AND external displays
+            CALL openDoors
+          
+        ENDFOR
+        MOVE TO the NEXT floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the last element OF the floorList
+                DISPLAY currentFloorNumber ON internal AND external displays
+        IF floorList IS EMPTY THEN
+            SET status OF elevator TO "IDLE"
+        ELSE 
+            SET status OF elevator TO "DOWN"
+        ENDIF
+            ELSE
+               / /moveDown 
+             FOR EACH floorN IN floorList
+             IF doors are open THEN
+                CALL closeDoors
+             ENDIF
+             MOVE elevator UP to the next item
+              DISPLAY floorN ON internal AND external displays
+              CALL openDoors
+            
+            
+            ENDFOR
+        MOVE TO the NEXT floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the last element OF the floorList
+                DISPLAY currentFloorNumber ON internal AND external displays
+      
+      
+          IF floorList IS EMPTY THEN
+            SET status OF elevator TO "IDLE"
+           ELSE 
+            SET status OF elevator TO "DOWN"
+           ENDIF
+        ENDWHILE
+    ENDSEQUENCE
+
+ 
+
+                                   -------------------  OPEN DOORS -------------------
+
+    SEQUENCE openDoors USING elevator AND floor AND waitingTime AND obstruction
+        IF elevator floor IS EQUAL TO floor THEN
+        SET timer TO 0 seconds
+            WHILE timer < waitingTime OR weightSensor IS "ON" OR obstructionSensor IS "ON"
+                open elevatorDoor OF elevator
+                SET elevatorDoor OF elevator TO "OPENED"
+                open floorDoor OF floorDoorsList WITH INDEX EQUAL floor
+                SET floorDoor  OF floorDoorsList WITH INDEX EQUAL floor TO "OPENED"
+            ENDWHILE
+            CALL closeDoors
+        ENDIF
+    ENDSEQUENCE
+
+                                  -------------------CLOSE DOORS -------------------
+
+    SEQUENCE closeDoors USING elevator AND waitingTime
+            IF weightSensor IS "OFF" OR obstructionSensor IS "OFF"
+                close elevatorDoor OF elevator
+                SET elevatorDoor OF elevator TO "CLOSED"
+                close floorDoor OF floorDoorsList WITH INDEX EQUAL floor
+                SET floorDoor OF floorDoorsList WITH INDEX EQUAL floor TO "CLOSED"
+            ENDIF
+        ENDIF
+    ENDSEQUENCE
+ 
+
+                            ------------------- OBSTRUCTION SENSOR -------------------
+
+    SEQUENCE checkObstruction USING elevator
+        IF an obstacle is detected by the door sensor THEN
+            SET obstructionSensor TO "ON"
+        ELSE 
+            SET obstructionSensor TO "OFF"
+    ENDSEQUENCE
+
+                ------------------- STORE FLOOR IN LIST WHEN  PRESSing BUTTON ------------------- 
+
+    SEQUENCE addFloorToFloorList USING elevator AND floor 
+        ADD floor TO floorList OF elevator 
+        SORT floorList OF elevator TO ASCENDING
+    ENDSEQUENCE
+
+ENDDEFINE
+
+
+
+                    
+                     ------------------- BUTTON REQUESTS OUTSIDE ELEVATOR -------------------
+
+// User goes to the specific column and press a button outside the elevator requesting for an elevator 
+SEQUENCE requestElevator USING currentFloor AND requestedDirection
+    READ currentFloor AND requestedDirection
+    IF requestedDirection is UP THEN
+        SET button OF buttonsUpList WITH INDEX EQUAL currentFloor TO "ON"
+    ELSE 
+        SET button OF buttonsDownList WITH INDEX EQUAL currentFloor TO "ON"
+    ENDIF
+    CALL findElevator WITH currentFloor AND requestedDirection AND column elevatorsList RETURNING bestElevator
+    CALL addFloorToFloorList WITH bestElevator AND currentFloor RETURNING floorList
+    CALL moveElevator WITH bestElevator AND floorList AND currentFloor
+ENDSEQUENCE
+
+                      ------------------- BUTTON REQUESTS INSIDE ELEVATOR -------------------
+
+// When user press a button inside the elevator requesting for a destination floor we have acces to the destinationFloor 
+SEQUENCE requestStop USING requestFloor AND elevator
+ 
+    CALL checkObstruction WITH obstructionSensor
+    READ requestedFloor AND requestedDirection
+    IF requestedDirection is UP THEN
+        SET button OF ButtonsUpList WITH INDEX EQUAL requestFloor TO "ON"
+    ELSE 
+        SET button OF buttonsDownList WITH INDEX EQUAL requestFloor TO "ON"
+    ENDIF
+    CALL addFloorToFloorList WITH elevator AND requestFloor
+    CALL moveElevator WITH elevator AND floorList AND requestFloor
+ENDSEQUENCE
+
+ 
+
+
+   
