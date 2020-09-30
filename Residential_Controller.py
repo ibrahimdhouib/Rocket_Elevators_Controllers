@@ -8,8 +8,7 @@ class ElevatorController:
         self.column = Column(NumberOfFloors, NumberOfElevators)
         print("Controller iniatiated")
 
-#   ---------here is where we are going to find the best elevetir and send the resquest-----------------------------------------------------------------------------
-
+#------------------------Request Elevator---------------------------------------------------------------
     def RequestElevator(self, currentFloor, currentDirection,WaitingTime):
         time.sleep(WaitingTime)
         print("---------------------------------------------------")
@@ -21,8 +20,8 @@ class ElevatorController:
         elevator = self.find_best_elevator(currentFloor, currentDirection)
         elevator.send_request(currentFloor,WaitingTime)
         return elevator
-# ----------send the request floor to send request------------------------------------------------------
 
+#-----------------------Request Floor----------------------------------------------------------------
     def RequestFloor(self, elevator, RequestFloor,WaitingTime):
         time.sleep(WaitingTime)
         print("---------------------------------------------------")
@@ -33,7 +32,7 @@ class ElevatorController:
         time.sleep(WaitingTime)
         elevator.send_request(RequestFloor,WaitingTime)
 
-#  -------------determine the best elevar for the call floor-------------------------------------------------------------------------
+#  -------------Find the Best elevator-----------------------------------------------------
 
     def find_best_elevator(self, currentFloor, currentDirection):
         bestElevator = None
@@ -52,6 +51,7 @@ class ElevatorController:
 
         return bestElevator
 
+##---------------------------------------------------------------------------------------
 
 class Elevator:
     def __init__(self, ElevatorN, status, elevator_floor, elevator_currentDirection):
@@ -60,14 +60,12 @@ class Elevator:
         self.elevator_floor = elevator_floor
         self.elevator_currentDirection = elevator_currentDirection
         self.floor_list = []
-#  -------------here is the stage before operate the elevator-------------------------------------------------------------------------
 
     def send_request(self, RequestFloor,waitingTime):
         self.floor_list.append(RequestFloor)
         self.addFloorList(RequestFloor,waitingTime)
         self.moveElevator(RequestFloor,waitingTime)
 
-# -------------here is the stage before operate the elevator-------------------------------------------------------------------------
 
     def addFloorList(self):
         if self.elevator_currentDirection == "up":
@@ -77,7 +75,6 @@ class Elevator:
             self.floor_list.reverse()
         return self.floor_list
 
- # -------------here is the stage before operate the elevator-------------------------------------------------------------------------
 
     def moveElevator(self, RequestFloor,waitingTime):
         while (len(self.floor_list) > 0):
@@ -122,7 +119,7 @@ class Elevator:
             self.status = "idle"
 
 
-# -------------open and close door-----------------------------------------------------------------------------
+# ------------- open Doors// close Doors -----------------------------------------------------------------------------
 
     def openDoors(self,waitingTime):
         time.sleep(WaitingTime)
@@ -139,7 +136,7 @@ class Elevator:
         time.sleep(WaitingTime)
 
 
-# -------------MOVE THE ELEVATOR---------------------------------------------------------------------------------
+# -------------MOVE  ELEVATOR---------------------------------------------------------------------------------
 
     def Move_up(self, RequestFloor,WaitingTime):
         print("Floor : ", self.elevator_floor)
@@ -180,7 +177,7 @@ class Column:
             self.elevatorList.append(elevator)
 
 
-# // // //------------- WORKINGGGG - -------------//// //
+# // // //------------- TEST - -------------//// //
 
 controller = ElevatorController(10, 2)
 controller.column.elevatorList[0].elevator_floor = 2
@@ -197,7 +194,7 @@ controller.RequestFloor(elevator, 7,1)
 print("==============================")
 print("scene 1 ended")
 print("==============================")
-# // // //---------------------------------------//// //
+
 
 # //////------------- WORKING - -------------//// //
 # controller = ElevatorController(10, 2)
