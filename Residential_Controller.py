@@ -63,7 +63,7 @@ class Elevator:
 
     def send_request(self, RequestFloor,waitingTime):
         self.floor_list.append(RequestFloor)
-        self.addFloorList(RequestFloor,waitingTime)
+        self.addFloorList()
         self.moveElevator(RequestFloor,waitingTime)
 
 
@@ -95,7 +95,7 @@ class Elevator:
                 print("---------------------------------------------------")
                 print("Elevator", self.ElevatorN, self.status)
                 print("---------------------------------------------------")
-                self.openDoors(waitingtime)
+                self.openDoors(RequestFloor)
                 self.floor_list.pop()
             elif (RequestFloor > self.elevator_floor):
 
@@ -105,7 +105,7 @@ class Elevator:
                 print("Elevator", self.ElevatorN, self.status)
                 print("---------------------------------------------------")
                 self.currentDirection = "up"
-                self.Move_up(RequestFloor)
+                self.Move_up(RequestFloor,waitingTime)
                 self.status = "stopped"
                 print("---------------------------------------------------")
                 print("Elevator", self.ElevatorN, self.status)
@@ -146,7 +146,7 @@ class Elevator:
             print("Floor : ", self.elevator_floor)
             time.sleep(WaitingTime)
 
-    def addFloorList(self, RequestFloor,WaitingTime):
+    def Move_down(self, RequestFloor,WaitingTime):
         print("Floor : ", self.elevator_floor)
         time.sleep(WaitingTime)
         while(self.elevator_floor != RequestFloor):
@@ -216,7 +216,7 @@ print("==============================")
 # print("End Senario 2")
 # print("==============================")
 
-#// // //------------- WORKINGGGG - -------------// // //
+#// // //------------- WORKINGGGG - -------------//// //
 
 # controller = ElevatorController(10, 2)
 
