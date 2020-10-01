@@ -17,5 +17,27 @@ class ElevatorController {
     }
 
     findbestelevator(CurrentFloor, Currentdirection){
-        for}
+        for(let i = 0; i < this.column.elevatorList.length; i++){
+            let elevator = this.column.elevatorList[i];
+            if (elevator.Status == "STOPPED" && elevator_Floor == CurrentFloor && elevator.direction == Currentdirection) {
+                return bestelevator(elevator, Currentdirection, CurrentFloor)
+            }
+            else if (elevator.Status === "IDLE" && elevator.floor === CurrentFloor){
+                return bestelevator(elevator, Currentdirection, CurrentFloor)
+            }
+            else if (elevator.Floor < CurrentFloor && (elevator.Status === "MOVING" || "STOPPED") && elevator.Direction === Currentdirection){  
+                return bestelevator(elevator, Currentdirection, CurrentFloor)
+            }
+            else if (elevator.Floor > CurrentFloor && (elevator.Status === "MOVING" || "STOPPED") && elevator.Direction === Currentdirection){
+                return bestelevator(elevator, Currentdirection, CurrentFloor)
+            }
+            else if (elevator.Status === "IDLE"){
+                return this.bestelevator(elevator, Currentdirection, CurrentFloor);
+            }
+        }
+    }
+}
+
+
+
 
