@@ -1,6 +1,8 @@
 import time
 WaitingTime = 1
 
+
+
 class ElevatorController:
     def __init__(self, NumberOfFloors, NumberOfElevators):
         self.NumberOfFloors = NumberOfFloors
