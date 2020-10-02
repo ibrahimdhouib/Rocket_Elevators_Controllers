@@ -64,14 +64,14 @@ class Elevator {
         this.requestfloorbutton = []
     }
 
-    sendRequest(RequestFloor){
+    sendRequest(RequestFloor) {
         console.log('send request', RequestFloor);
         this.floorList.push(RequestFloor);
         this.sort_addFloorList();
         this.controlelevator(RequestFloor);
     }
 
-    addFloorList(floor_list){
+    addFloorList(floor_list) {
         console.log("Entered FloorList in elevator");
         if (this.elevator_currentDirection === "UP") {
             this.floor_list.sort();
