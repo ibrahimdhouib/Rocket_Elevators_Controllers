@@ -38,6 +38,5 @@ class ElevatorController {
     }
 }
 
-set
 
 
