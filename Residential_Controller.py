@@ -180,40 +180,39 @@ class Column:
 
 # // // //------------- TEST - -------------// // //
 
-#controller = ElevatorController(10, 2)
-#controller.column.elevatorList[0].elevator_floor = 2
+controller = ElevatorController(10, 2)
+controller.column.elevatorList[0].elevator_floor = 2
 
-#controller.column.elevatorList[0].status = "moving"
-#controller.column.elevatorList[0].elevator_currentDirection = "down"
-#controller.column.elevatorList[1].elevator_floor = 6
+controller.column.elevatorList[0].status = "moving"
+controller.column.elevatorList[0].elevator_currentDirection = "down"
+controller.column.elevatorList[1].elevator_floor = 6
 
-#controller.column.elevatorList[1].status = "moving"
-#controller.column.elevatorList[1].elevator_currentDirection = "down"
+controller.column.elevatorList[1].status = "moving"
+Controller.column.elevatorList[1].elevator_currentDirection = "down"
 
-#elevator = controller.RequestElevator(5, "up",1)
-#controller.RequestFloor(elevator, 7,1)
-#print("==============================")
-#print(" End Senario 1 ")
-#print("==============================")
+elevator = controller.RequestElevator(5, "up",1)
+controller.RequestFloor(elevator, 7,1)
+print("==============================")
+print(" End Senario 1 ")
+print("==============================")
 
 
 # // // //------------- WORKING - -------------// // //
-#controller.column.elevatorList[0].elevator_floor = 10
-#controller.column.elevatorList[0].status = "moving"
-#controller.column.elevatorList[0].elevator_currentDirection = "down"
-#controller.column.elevatorList[1].elevator_floor = 3
-#controller.column.elevatorList[1].status = "moving"
-#controller.column.elevatorList[1].elevator_currentDirection = "down"
+controller.column.elevatorList[0].elevator_floor = 10
+controller.column.elevatorList[0].status = "moving"
+controller.column.elevatorList[0].elevator_currentDirection = "down"
+controller.column.elevatorList[1].elevator_floor = 3
+controller.column.elevatorList[1].status = "moving"controller.column.elevatorList[1].elevator_currentDirection = "down"
 
-#elevator = controller.RequestElevator(1, "up",1)
-#controller.RequestFloor(elevator, 6,1)
-#elevator = controller.RequestElevator(3, "up",1)
-#controller.RequestFloor(elevator, 5,1)
-#elevator = controller.RequestElevator(9, "down",1)
-#controller.RequestFloor(elevator, 2,1)
-#print("==============================")
-#print("End Senario 2")
-#print("==============================")
+elevator = controller.RequestElevator(1, "up",1)
+controller.RequestFloor(elevator, 6,1)
+elevator = controller.RequestElevator(3, "up",1)
+controller.RequestFloor(elevator, 5,1)
+elevator = controller.RequestElevator(9, "down",1)
+controller.RequestFloor(elevator, 2,1)
+print("==============================")
+print("End Senario 2")
+print("==============================")
 
 #// // //------------- WORKINGGGG - -------------//// //
 
